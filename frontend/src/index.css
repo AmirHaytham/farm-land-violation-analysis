@@ -1,0 +1,80 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.mapboxgl-map {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+.map-container {
+  height: 400px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.map-overlay {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.violation-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.severity-high {
+  background-color: rgba(244, 67, 54, 0.8);
+  border: 2px solid #d32f2f;
+}
+
+.severity-medium {
+  background-color: rgba(255, 152, 0, 0.8);
+  border: 2px solid #ef6c00;
+}
+
+.severity-low {
+  background-color: rgba(255, 235, 59, 0.8);
+  border: 2px solid #f9a825;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  border-width: 2px;
+  border-radius: 8px;
+  border-color: #eeeeee;
+  border-style: dashed;
+  background-color: #fafafa;
+  color: #bdbdbd;
+  transition: border .3s ease-in-out;
+}
+
+.dropzone:hover {
+  border-color: #2196f3;
+}
+
+.active {
+  border-color: #2196f3;
+}

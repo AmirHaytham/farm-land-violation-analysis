@@ -1,0 +1,10 @@
+unauthorized_building
+deforestation
+land_use_change
+agricultural_equipment
+waste_dumping
+excavation
+crop_change
+irrigation_change
+fencing
+normal_farmland
