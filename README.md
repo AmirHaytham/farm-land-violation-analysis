@@ -273,5 +273,49 @@ Currently, the backend uses mock implementation for the violation detection. Whe
 
 This architecture allows for seamless integration of the AI component when it's developed, without requiring major changes to the frontend or API structure.
 
+## Screenshots
+
+Screenshots of the application's key interfaces are stored in the `/screenshots` directory.
+
+### Login & Authentication
+
+Place your login page screenshot here:
+
+```
+![Login Page](./screenshots/login.png)
+```
+
+### Dashboard
+
+Place your dashboard screenshot here:
+
+```
+![Dashboard](./screenshots/dashboard.png)
+```
+
+### Upload Interface
+
+Place your upload interface screenshot here:
+
+```
+![Upload Interface](./screenshots/upload.png)
+```
+
+### Analysis Results
+
+Place your analysis results page screenshot here:
+
+```
+![Analysis Results](./screenshots/analysis_results.png)
+```
+
+### Reports Page
+
+Place your reports page screenshot here:
+
+```
+![Reports Page](./screenshots/reports.png)
+```
+
 ## License
 MIT
