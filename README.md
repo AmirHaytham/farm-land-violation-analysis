@@ -172,5 +172,106 @@ The system uses a labeled dataset of satellite/aerial images containing:
 
 See `/dataset` directory for sample data and `/docs/dataset.md` for detailed dataset information.
 
+## Features & API Endpoints
+
+### Backend (FastAPI) Endpoints
+
+#### Authentication Endpoints
+
+- **POST `/users/register`**
+  - **Function**: Creates new user accounts
+  - **Input**: Username, email, password
+  - **Output**: User object with ID and creation timestamp
+
+- **POST `/users/login`**
+  - **Function**: Authenticates users and provides JWT tokens
+  - **Input**: Username, password
+  - **Output**: JWT access token
+
+#### Analysis Endpoints
+
+- **POST `/analysis/upload`**
+  - **Function**: Primary endpoint for uploading and analyzing satellite/aerial imagery
+  - **Input**: Image file, optional geospatial metadata (latitude, longitude, region)
+  - **Output**: Analysis ID and preliminary detection results
+  - **Process**:
+    1. Saves uploaded image
+    2. Processes through detection pipeline (mock implementation currently)
+    3. Returns violation detections with confidence scores, bounding boxes
+    4. Maps violations to applicable regulations
+
+- **GET `/analysis/{analysis_id}`**
+  - **Function**: Retrieves detailed analysis results for a specific ID
+  - **Input**: Analysis ID from URL path
+  - **Output**: Comprehensive analysis data including violations, regulations, location data
+
+- **GET `/analysis/{analysis_id}/report`**
+  - **Function**: Generates formatted reports for violations
+  - **Input**: Analysis ID and format (PDF or GeoJSON)
+  - **Output**: Downloadable report file
+
+#### Data Endpoints
+
+- **GET `/regulations/{region}`**
+  - **Function**: Retrieves applicable land-use regulations for a specific region
+  - **Input**: Region name
+  - **Output**: List of regulations with descriptions and applicable violation types
+
+- **GET `/statistics/violations`**
+  - **Function**: Provides aggregated statistics on violations
+  - **Output**: Counts of analyses, violations by type, compliance rates
+
+### Frontend (React) Features
+
+#### Authentication Module
+
+- **Login Page**: User authentication with credential validation
+- **Register Page**: New user registration with form validation
+- **Protected Routes**: Route guarding for authenticated sections
+- **Authentication State**: Redux-managed auth state with JWT token handling
+
+#### Dashboard
+
+- **Statistics Overview**: Shows key metrics (analyses count, violation rates)
+- **Visualization Charts**:
+  - Pie chart showing violation type distribution
+  - Bar chart showing analysis trends over time
+- **Recent Analyses**: Grid of recent uploads with preview and status
+- **Quick Actions**: Direct links to upload and reports
+
+#### Upload & Analysis Pipeline
+
+- **Upload Interface**:
+  - Drag-and-drop file uploader
+  - Image preview functionality
+  - Geospatial metadata form (coordinates, region)
+  - Upload progress indicator
+
+- **Analysis Viewer**:
+  - Detailed results presentation with violation highlighting
+  - Map visualization of violations (using Mapbox)
+  - Severity indicators for different violation types
+  - Regulatory matches with recommendations
+  - Report generation options (PDF, GeoJSON)
+
+#### Reports Management
+
+- **Reports List**: Searchable, filterable table of all analyses
+- **Filter System**: Filter by violation status, date, region
+- **Search Functionality**: Search by filename or metadata
+- **Pagination**: Handles large numbers of reports
+- **Report Actions**: View, download, delete operations
+
+### Current Implementation vs. Future AI Integration
+
+Currently, the backend uses mock implementation for the violation detection. When the YOLOv8 model is integrated:
+
+1. The `/analysis/upload` endpoint will process images through the actual AI model
+2. The detection results will include real AI-generated confidence scores
+3. The frontend visualization will remain largely unchanged
+4. The system will identify real violations instead of random mock data
+
+This architecture allows for seamless integration of the AI component when it's developed, without requiring major changes to the frontend or API structure.
+
 ## License
 MIT
