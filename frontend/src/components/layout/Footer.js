@@ -16,7 +16,7 @@ const Footer = () => {
         <Typography variant="body2" color="text.secondary" align="center">
           {'© '}
           {new Date().getFullYear()}
-          {' Farm Land Violation Analysis System. All rights reserved. '}
+          {' Made with <3 by Amir Haytham '}
         </Typography>
         <Typography variant="body2" color="text.secondary" align="center">
           <Link color="inherit" href="#">
