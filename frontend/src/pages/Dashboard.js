@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link as RouterLink } from 'react-router-dom';
 import {
@@ -17,6 +17,10 @@ import {
   ListItemText,
   ListItemIcon,
   CircularProgress,
+  Chip,
+  LinearProgress,
+  Stack,
+  Tooltip as MuiTooltip,
 } from '@mui/material';
 import {
   CloudUpload,
@@ -25,6 +29,11 @@ import {
   CheckCircle,
   Info,
   ArrowForward,
+  Gavel,
+  Title as TitleIcon,
+  PublishedWithChanges,
+  LocationOn,
+  CalendarMonth,
 } from '@mui/icons-material';
 import { getRecentAnalyses } from '../store/slices/analysisSlice';
 import { Pie, Bar } from 'react-chartjs-2';
@@ -36,9 +45,19 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { recentAnalyses, loading } = useSelector((state) => state.analysis);
+  
+  // State for land acquisition data
+  const [acquisitionData, setAcquisitionData] = useState([]);
+  const [acquisitionLoading, setAcquisitionLoading] = useState(true);
 
   useEffect(() => {
     dispatch(getRecentAnalyses());
+    
+    // Simulate fetching land acquisition data
+    setTimeout(() => {
+      setAcquisitionData(mockLandAcquisitions);
+      setAcquisitionLoading(false);
+    }, 1000);
   }, [dispatch]);
 
   // Mock statistics data for the dashboard
@@ -53,6 +72,70 @@ const Dashboard = () => {
       other: 5,
     },
     compliance_rate: 43.3,
+  };
+  
+  // Mock data for government land acquisitions
+  const mockLandAcquisitions = [
+    {
+      id: 'acq-001',
+      parcelId: 'F28-74-92',
+      location: 'North Valley Agricultural Zone',
+      area: 24.5, // hectares
+      purpose: 'Infrastructure Development - Water Treatment Facility',
+      status: 'Under Review',
+      progressPercentage: 30,
+      startDate: '2025-03-15',
+      estimatedCompletionDate: '2025-07-30',
+      ownerNotified: true,
+      compensationOffered: true,
+      publicHearingScheduled: true,
+      finalApproval: false,
+      transferComplete: false,
+    },
+    {
+      id: 'acq-002',
+      parcelId: 'F12-38-45',
+      location: 'Eastern Highland Farms',
+      area: 18.2, // hectares
+      purpose: 'Protected Conservation Area Expansion',
+      status: 'Approved',
+      progressPercentage: 80,
+      startDate: '2025-01-20',
+      estimatedCompletionDate: '2025-06-15',
+      ownerNotified: true,
+      compensationOffered: true,
+      publicHearingScheduled: true,
+      finalApproval: true,
+      transferComplete: false,
+    },
+    {
+      id: 'acq-003',
+      parcelId: 'F43-22-88',
+      location: 'South River Agricultural District',
+      area: 32.7, // hectares
+      purpose: 'Renewable Energy Project - Solar Farm',
+      status: 'Pending Owner Response',
+      progressPercentage: 40,
+      startDate: '2025-04-05',
+      estimatedCompletionDate: '2025-09-10',
+      ownerNotified: true,
+      compensationOffered: true,
+      publicHearingScheduled: false,
+      finalApproval: false,
+      transferComplete: false,
+    },
+  ];
+  
+  // Helper function to get status chip color
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'Under Review': return 'primary';
+      case 'Approved': return 'success';
+      case 'Pending Owner Response': return 'warning';
+      case 'Completed': return 'success';
+      case 'Rejected': return 'error';
+      default: return 'default';
+    }
   };
 
   // Prepare chart data
@@ -270,6 +353,153 @@ const Dashboard = () => {
             </Paper>
           </Grid>
 
+          {/* Government Land Acquisition */}
+          <Grid item xs={12}>
+            <Paper
+              sx={{
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" display="flex" alignItems="center">
+                  <Gavel sx={{ mr: 1 }} />
+                  Government Land Acquisition Monitoring
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="small"
+                  color="primary"
+                  startIcon={<TitleIcon />}
+                  component={RouterLink}
+                  to="/acquisitions"
+                >
+                  View All Acquisitions
+                </Button>
+              </Box>
+              <Divider sx={{ mb: 2 }} />
+              
+              {acquisitionLoading ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4 }}>
+                  <CircularProgress sx={{ mb: 2 }} />
+                  <Typography>Loading land acquisition data...</Typography>
+                </Box>
+              ) : acquisitionData.length > 0 ? (
+                <Grid container spacing={3}>
+                  {acquisitionData.map((acquisition) => (
+                    <Grid item xs={12} md={4} key={acquisition.id}>
+                      <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <CardContent sx={{ flexGrow: 1 }}>
+                          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                            <Typography variant="subtitle1" fontWeight="bold">
+                              Parcel: {acquisition.parcelId}
+                            </Typography>
+                            <Chip 
+                              label={acquisition.status} 
+                              color={getStatusColor(acquisition.status)}
+                              size="small"
+                            />
+                          </Stack>
+                          
+                          <Box sx={{ mt: 1, mb: 2 }}>
+                            <MuiTooltip title={`Progress: ${acquisition.progressPercentage}%`}>
+                              <LinearProgress 
+                                variant="determinate" 
+                                value={acquisition.progressPercentage} 
+                                sx={{ height: 8, borderRadius: 5 }}
+                              />
+                            </MuiTooltip>
+                          </Box>
+                          
+                          <Stack spacing={1}>
+                            <Box display="flex" alignItems="center">
+                              <LocationOn fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2" noWrap>
+                                {acquisition.location}
+                              </Typography>
+                            </Box>
+                            
+                            <Typography variant="body2" color="text.secondary">
+                              <strong>Area:</strong> {acquisition.area} hectares
+                            </Typography>
+                            
+                            <Typography variant="body2" color="text.secondary">
+                              <strong>Purpose:</strong> {acquisition.purpose}
+                            </Typography>
+                            
+                            <Box display="flex" alignItems="center">
+                              <CalendarMonth fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2" color="text.secondary">
+                                Started: {new Date(acquisition.startDate).toLocaleDateString()}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          
+                          <Divider sx={{ my: 2 }} />
+                          
+                          <Typography variant="subtitle2" gutterBottom>
+                            Acquisition Process:
+                          </Typography>
+                          
+                          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                            <Chip 
+                              size="small" 
+                              label="Owner Notified" 
+                              color={acquisition.ownerNotified ? 'success' : 'default'}
+                              variant={acquisition.ownerNotified ? 'filled' : 'outlined'}
+                            />
+                            <Chip 
+                              size="small" 
+                              label="Compensation" 
+                              color={acquisition.compensationOffered ? 'success' : 'default'}
+                              variant={acquisition.compensationOffered ? 'filled' : 'outlined'}
+                            />
+                            <Chip 
+                              size="small" 
+                              label="Public Hearing" 
+                              color={acquisition.publicHearingScheduled ? 'success' : 'default'}
+                              variant={acquisition.publicHearingScheduled ? 'filled' : 'outlined'}
+                            />
+                            <Chip 
+                              size="small" 
+                              label="Final Approval" 
+                              color={acquisition.finalApproval ? 'success' : 'default'}
+                              variant={acquisition.finalApproval ? 'filled' : 'outlined'}
+                            />
+                            <Chip 
+                              size="small" 
+                              label="Transfer Complete" 
+                              color={acquisition.transferComplete ? 'success' : 'default'}
+                              variant={acquisition.transferComplete ? 'filled' : 'outlined'}
+                            />
+                          </Stack>
+                        </CardContent>
+                        <CardActions>
+                          <Button 
+                            size="small" 
+                            startIcon={<PublishedWithChanges />}
+                            fullWidth
+                          >
+                            View Acquisition Details
+                          </Button>
+                        </CardActions>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 3 }}>
+                  <Info color="info" sx={{ fontSize: 40, mb: 2 }} />
+                  <Typography variant="body1">
+                    No land acquisition records found in your region.
+                  </Typography>
+                </Box>
+              )}
+            </Paper>
+          </Grid>
+          
           {/* Recent Analyses */}
           <Grid item xs={12}>
             <Paper
