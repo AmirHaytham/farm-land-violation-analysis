@@ -1,28 +1,50 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-from typing import List, Optional, Dict, Any
-import os
-import uuid
-import json
-import shutil
 import datetime
+import json
+import os
+import shutil
+import uuid
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 
 # Import our custom modules
+from database import Base, engine, get_db
 from models.schemas import (
-    UserCreate, 
-    UserLogin, 
-    User, 
-    ViolationDetection, 
     AnalysisResult,
     DetectionResponse,
-    RegulationMatch
+    RegulationMatch,
+    User,
+    UserCreate,
+    UserLogin,
+    ViolationDetection,
 )
-from services.auth import get_password_hash, verify_password, create_access_token, get_current_user
-from services.violation_detection import process_image, generate_report
-from services.geospatial import extract_geospatial_data, create_geojson
+from services.auth import (
+    create_access_token,
+    create_user,
+    get_current_user,
+    get_user_by_email,
+    get_user_by_username,
+    get_password_hash,
+    verify_password,
+)
+from services.geospatial import create_geojson, extract_geospatial_data
+from services.violation_detection import generate_report, process_image
+
+# Create database tables - synchronous for reliability
+Base.metadata.create_all(bind=engine)
 
 # Create the FastAPI app
 app = FastAPI(
@@ -57,31 +79,88 @@ def read_root():
     return {"message": "Welcome to Farm Land Violation Analysis API"}
 
 # User Authentication Routes
-@app.post("/users/register", response_model=User, status_code=status.HTTP_201_CREATED)
-async def register_user(user: UserCreate):
-    # In a real application, check if user exists & save to database
-    hashed_password = get_password_hash(user.password)
-    new_user = {
-        "id": str(uuid.uuid4()),
-        "email": user.email,
-        "username": user.username,
-        "hashed_password": hashed_password,
-        "created_at": datetime.datetime.now().isoformat()
-    }
-    # For prototype: just return user object (would save to DB in production)
-    return User(
-        id=new_user["id"],
-        email=new_user["email"],
-        username=new_user["username"],
-        created_at=new_user["created_at"]
-    )
+@app.post("/users/register", status_code=status.HTTP_201_CREATED)
+def register_user(user: UserCreate, db: Session = Depends(get_db)):
+    """Register a new user."""
+    try:
+        # Check if username already exists
+        db_user = get_user_by_username(db, username=user.username)
+        if db_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already registered"
+            )
+        
+        # Check if email already exists
+        db_email = get_user_by_email(db, email=user.email)
+        if db_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        
+        # Create new user
+        db_user = create_user(db=db, user_data=user.dict())
+        
+        # Create access token
+        access_token_expires = datetime.timedelta(minutes=30)
+        access_token = create_access_token(
+            data={"sub": db_user.username}, expires_delta=access_token_expires
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": str(db_user.id),
+                "username": db_user.username,
+                "email": db_user.email,
+                "created_at": db_user.created_at.isoformat() if db_user.created_at else None
+            }
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating user: {str(e)}"
+        )
 
 @app.post("/users/login")
-async def login(user_data: UserLogin):
-    # Placeholder: In real app, verify against database
-    # This is just a mock response for the prototype
-    token = create_access_token({"sub": user_data.username})
-    return {"access_token": token, "token_type": "bearer"}
+def login(user_data: UserLogin, db: Session = Depends(get_db)):
+    """Authenticate user and return access token."""
+    try:
+        # Get user from database
+        user = get_user_by_username(db, username=user_data.username)
+        
+        # Verify user exists and password is correct
+        if not user or not verify_password(user_data.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Create access token
+        access_token_expires = datetime.timedelta(minutes=30)
+        access_token = create_access_token(
+            data={"sub": user.username}, expires_delta=access_token_expires
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": str(user.id),
+                "username": user.username,
+                "email": user.email,
+                "created_at": user.created_at.isoformat() if user.created_at else None
+            }
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error during login: {str(e)}"
+        )
 
 # Violation Detection Routes
 @app.post("/analysis/upload", response_model=DetectionResponse)
