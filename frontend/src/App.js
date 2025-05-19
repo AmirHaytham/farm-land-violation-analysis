@@ -14,6 +14,8 @@ import Reports from './pages/Reports';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import NotFound from './pages/NotFound';
+import LandAcquisitions from './pages/LandAcquisitions';
+import AcquisitionDetail from './pages/AcquisitionDetail';
 
 // Auth Protection
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -44,6 +46,16 @@ function App() {
           <Route path="/reports" element={
             <ProtectedRoute>
               <Reports />
+            </ProtectedRoute>
+          } />
+          <Route path="/acquisitions" element={
+            <ProtectedRoute>
+              <LandAcquisitions />
+            </ProtectedRoute>
+          } />
+          <Route path="/acquisition/:id" element={
+            <ProtectedRoute>
+              <AcquisitionDetail />
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />
